@@ -2,6 +2,7 @@
    ESP8266 (NodeMCU) Handling Web form data basic example
    <a href="https://circuits4you.com">https://circuits4you.com</a>
 */
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 //#include <ESP8266WiFi.h>
@@ -16,11 +17,11 @@
 
 //WiFi related
 #ifndef STASSID
-#define STASSID "your-SSID"
-#define STAPSK  "your-pw"
+#define STASSID "Infinix HOT 11 2022"
+#define STAPSK  "123456789"
 #endif
 
-#define LEDstatus D0
+#define LEDstatus 0
 
 const char* ssid = STASSID;
 const char* password = STAPSK;
@@ -31,7 +32,7 @@ const char* password = STAPSK;
 //
 
 //ws2812 data pin
-#define PIN D4
+#define PIN 1
 String showtext;
 int lenghtpixel;
 //text on startup is repeated infinity
@@ -49,7 +50,7 @@ int pass = 0;
 int repeat;
 
 //setup the matrix: 35 pixels x 8 columns starting from top left in zigzag rows with 800kHz bitstream
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(35, 8, PIN,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(60, 7, PIN,
                             NEO_MATRIX_TOP    + NEO_MATRIX_LEFT +
                             NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
                             NEO_GRB            + NEO_KHZ800);
@@ -148,12 +149,12 @@ const char MAIN_page[] PROGMEM = R"=====(
   </head>
   <body bgcolor="#141414">
   <font color="white" style="font-size: 18px">
-      <h2 class="header">SIGN</h2>
+      <h2 class="header">LED MATRIX SIGN by CEDR777</h2>
       <h3 class="header">CONTROL PANEL</h3>
       <form action="/action_page">
           <fieldset class="fieldset">
               <div class="text">
-                  <span class="text">Farbe:</span>
+                  <span class="text">Color:</span>
               </div>
               <div class="color_button">
                   <input type="color" class="color_button" name="webcolor" value="?color?">
@@ -297,6 +298,9 @@ Serial.println(repeat);
 //                  SETUP
 //==============================================================
 void setup(void){
+  WiFiManager wifiManager;
+  wifiManager.autoConnect();
+
   Serial.begin(115200);
   WiFi.begin(ssid, password);     //Connect to your WiFi router
   Serial.println("");
@@ -334,7 +338,7 @@ void setup(void){
   Serial.println("HTTP server started");
   matrix.begin();
   matrix.setTextWrap(false);
-  matrix.setBrightness(10);
+  matrix.setBrightness(255);
 
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
