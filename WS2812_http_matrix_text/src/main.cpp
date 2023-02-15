@@ -1,11 +1,6 @@
-/*
-   ESP8266 (NodeMCU) Handling Web form data basic example
-   <a href="https://circuits4you.com">https://circuits4you.com</a>
-*/
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
+#include <WiFiManager.h>      
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
-//#include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
@@ -15,23 +10,9 @@
 #include <sstream>
 #include <string>
 
-//WiFi related
-#ifndef STASSID
-#define STASSID "Infinix HOT 11 2022"
-#define STAPSK  "123456789"
-#endif
-
 #define LEDstatus 0
+#define BRIGHTNESS 255
 
-const char* ssid = STASSID;
-const char* password = STAPSK;
-
-
-//
-// WS2812 Setup
-//
-
-//ws2812 data pin
 #define PIN 1
 String showtext;
 int lenghtpixel;
@@ -45,6 +26,7 @@ int speed = 20;
 String webspeed = String("80");
 String webrepeat = String("10");
 String webcolor = "#00FF00";
+String webbrightness = "";
 
 int pass = 0;
 int repeat;
@@ -55,7 +37,6 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(60, 7, PIN,
                             NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
                             NEO_GRB            + NEO_KHZ800);
 
-
 int x = matrix.width();
 
 /*
@@ -63,8 +44,6 @@ const uint16_t colors[] = {
   matrix.Color(255, 0, 0), matrix.Color(0, 255, 0), matrix.Color(0, 0, 255), matrix.Color(255, 255, 255), matrix.Color(255, 100, 0)
 };
 */
-
-
 
 //
 //Webpage
@@ -149,7 +128,7 @@ const char MAIN_page[] PROGMEM = R"=====(
   </head>
   <body bgcolor="#141414">
   <font color="white" style="font-size: 18px">
-      <h2 class="header">LED MATRIX SIGN by CEDR777</h2>
+      <h2 class="header">LED MATRIX SIGN by Engr. Carl</h2>
       <h3 class="header">CONTROL PANEL</h3>
       <form action="/action_page">
           <fieldset class="fieldset">
@@ -175,7 +154,7 @@ const char MAIN_page[] PROGMEM = R"=====(
               <br>
                   <input type="number" class="number_form" name="repeatnumber" min="1" max="1000" value="?repeat?" oninput="this.form.repeat.value=this.value" />
               <br>
-                  <span>infinity loop?</span>
+                  <span>repeat forever?</span>
                   <input type="checkbox" name="infrepeat" checked>
               </div>
           </fieldset>
@@ -188,6 +167,17 @@ const char MAIN_page[] PROGMEM = R"=====(
                   <input type="number" class="number_form" name="speednumber" min="1" max="100" value="?speed?" oninput="this.form.speed.value=this.value" />
               </div>
           </fieldset>
+
+          <fieldset class="fieldset">
+              <div class="center">
+                  <span>Brightness:</span>
+                  <br>
+                  <input type="range" class="slider" name="brightness" min="1" max="255" value="?brightness?" oninput="this.form.brightnessnumber.value=this.value" />
+                  <br>
+                  <input type="number" class="number_form" name="brightness" min="1" max="255" value="?brightness?" oninput="this.form.brightness.value=this.value" />
+              </div>
+          </fieldset>
+
           <br>
           <div class="center">
               <input type="submit" class="submit_button" value="UPDATE SIGN">
@@ -219,6 +209,7 @@ void handleRoot() {
  s.replace("?repeat?", webrepeat);
  s.replace("?speed?", webspeed);
  s.replace("?color?", webcolor);
+ s.replace("?brightness?", webbrightness);
  server.send(200, "text/html", s); //Send web page
 }
 
@@ -288,6 +279,7 @@ Serial.println(repeat);
   s.replace("?repeat?", webrepeat);
   s.replace("?speed?", webspeed);
   s.replace("?color?", webcolor);
+  s.replace("?brightness?", webbrightness);
   Serial.println(s);
   server.send(200, "text/html", s); //Send web page
 }
@@ -298,11 +290,27 @@ Serial.println(repeat);
 //                  SETUP
 //==============================================================
 void setup(void){
-  WiFiManager wifiManager;
-  wifiManager.autoConnect();
-
+  WiFi.mode(WIFI_STA);
+  //wifiManager.autoConnect();
   Serial.begin(115200);
-  WiFi.begin(ssid, password);     //Connect to your WiFi router
+  WiFiManager wm;
+  //wm.resetSettings();
+
+  bool res;
+  // res = wm.autoConnect(); // auto generated AP name from chipid
+  // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
+  res = wm.autoConnect("LED_Matrix_Signage",""); // password protected ap
+
+  if(!res) {
+        Serial.println("Failed to connect...");
+        // ESP.restart();
+    } 
+    else {
+        //if you get here you have connected to the WiFi    
+        Serial.println("connected...! :)");
+    }
+
+  //WiFi.begin(ssid, password);     //Connect to your WiFi router
   Serial.println("");
   pinMode(LEDstatus, OUTPUT);
   // Wait for connection
